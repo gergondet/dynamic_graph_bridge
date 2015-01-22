@@ -97,7 +97,7 @@ macro(compile_plugin NAME)
   dynamic_graph_python_module("ros/${NAME}"
     ${NAME}
     ros/${NAME}/wrap
-    ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
+    ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/../
     )
 
   PKG_CONFIG_USE_DEPENDENCY(ros/${NAME}/wrap jrl-mal)
