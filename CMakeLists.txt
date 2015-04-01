@@ -75,12 +75,11 @@ install(TARGETS ros_bridge DESTINATION lib)
 
 # Make sure rpath are preserved during the install as ROS dependencies
 # are not installed.
-set_target_properties(ros_bridge PROPERTIES BUILD_WITH_INSTALL_RPATH True
-                      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set_target_properties(ros_bridge PROPERTIES BUILD_WITH_INSTALL_RPATH True)
 
 macro(compile_plugin NAME)
   message(lib path ${LIBRARY_OUTPUT_PATH})
-  #file(MAKE_DIRECTORY "${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/dynamic_graph/ros/${NAME}")
+  file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_PATH}/dynamic_graph/ros/${NAME}")
   add_library(${NAME} src/${NAME}.cpp src/${NAME}.hh)
   pkg_config_use_dependency(${NAME} jrl-mal)
   pkg_config_use_dependency(${NAME} dynamic-graph)
@@ -92,19 +91,20 @@ macro(compile_plugin NAME)
   set_target_properties(${NAME} PROPERTIES BUILD_WITH_INSTALL_RPATH True)
   install(TARGETS ${NAME} DESTINATION lib)
 
-  #FIXME Hackish way to overcome relink issue
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/CMakeFiles/CMakeRelink.dir/dynamic_graph/ros)
-
   dynamic_graph_python_module("ros/${NAME}"
     ${NAME}
     ros/${NAME}/wrap
-    ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/../
     )
 
   PKG_CONFIG_USE_DEPENDENCY(ros/${NAME}/wrap jrl-mal)
   PKG_CONFIG_USE_DEPENDENCY(ros/${NAME}/wrap dynamic_graph)
   PKG_CONFIG_USE_DEPENDENCY(ros/${NAME}/wrap sot-core)
   target_link_libraries(ros/${NAME}/wrap ${catkin_LIBRARIES})
+  file(MAKE_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_PYTHON_DESTINATION}/dynamic_graph/ros/${NAME})
+  set_target_properties(ros/${NAME}/wrap PROPERTIES
+                        LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_PYTHON_DESTINATION})
+  file(COPY ${PROJECT_BINARY_DIR}/src/dynamic_graph/ros/${NAME}/__init__.py
+       DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_PYTHON_DESTINATION}/dynamic_graph/ros/${NAME})
 endmacro()
 
 include(cmake/python.cmake)
@@ -127,8 +127,7 @@ target_link_libraries(ros_interpreter ${catkin_LIBRARIES})
 
 add_dependencies(ros_interpreter ros_bridge)
 target_link_libraries(ros_interpreter ros_bridge)
-set_target_properties(ros_interpreter PROPERTIES BUILD_WITH_INSTALL_RPATH True
-                      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set_target_properties(ros_interpreter PROPERTIES BUILD_WITH_INSTALL_RPATH True)
 message(cmakeinstalllibdir ${CMAKE_INSTALL_LIBDIR} )
 install(TARGETS ros_interpreter DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
